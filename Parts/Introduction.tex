@@ -1,0 +1,22 @@
+% Introduction
+This work has the aim to exploit some new generation techniques for the creation of three-dimensional models of biological parts. It is an extremely interesting field for the advancement of scientific research, because it allows to infer knowledge from data in a simple and effective way. Moreover, it brings together some of the most interesting sciences:
+
+\begin{itemize}
+ \item Scientific Visualization
+ \item Big Data
+ \item High Performance Computing
+ \item Computational Topology
+\end{itemize}
+
+Therefore, our aim is to show also how to link all these disciplines in a systematic way, introducing a new methodology which can shows and remove the problem related with the current state of the art. In fact, nowadays there are many technologies which permits to shows detailed images of biological parts. Several of these are commonly used in medical diagnostics, for example we can cite \textbf{PET} or \textbf{magnetic resonance}. They produces two-dimensional images of slices of the interesting organs, which are then collected in stacks for a rough three-dimensional representation. In addition, there are several techniques for the creation of a real three-dimensional model which involve \textbf{volumetric} reconstruction and \textbf{isosurfaces} reconstruction (which are extensively used in computer graphics). Their usefulness, lies in the high readability of the final result for research purposes on little-known structures. Furthermore, they can be used in combination with 3D printers to realize little models which can be useful for medical interventions. First problems, arises when the input grows in sizes. In fact the continuous progresses in scientific research, need images that have to be more and more detailed to fully understand the functioning of biological parts. However, these techniques we have cited above, have poor efficiency or are not detailed enough at highest resolutions.\\
+
+
+The new methodologies introduced with this work, want to solve these problems. In particular, we will see a novel approach for the extraction of boundary of complex shapes which involves algebraic topology techniques. It is based on a representation schema called \textbf{LAR} (Linear Algebraic Representation) which is under development by several years at the Computational and Visual Design laboratory at the Roma Tre University. Its key features are the simplicity and the small space required to define every complex shape with only a description of vertices and the relationships between them in terms of edges, faces and cells. Moreover, we will see that algorithms for these structures are efficient in time and space with respect to traditional methods. Finally, to solve problems regarding huge volume of data we will show a technique for parallelization of computation which exploit some interesting characteristics of LAR.\\
+
+In detail, this thesis is organized in the following way:
+\begin{description}
+ \item The first part describes the current state of art. It is divided into four chapters, the first two ones introduce the Scientific Visualization field and problems and opportunities related to the Big Data. The third chapter describes the fundamentals for \textbf{medical imaging} field comprehension and the fourth one shows the state of the art of Computer Graphics for the creation of three-dimensional models
+ \item The second part describes the methodologies adopted. It is divided into three chapters which show the fundamentals of topological algebra and the LAR representation schema, the principles of \textbf{High Performance Computing} and some important aspects of the language chosen for the implementation: \textbf{Julia}
+ \item The third part shows the structure and the functionalities of the application with three chapter which describe the overall architecture, the input manipulation and the conversion process from the stack of images to the three-dimensional model
+ \item The fourth part describes some case studies accompanied by a wide photographic documentation and the conclusions regarding the work results
+\end{description}
