@@ -1,16 +1,16 @@
-In this work has been used the \textbf{Julia language} as the main programming language. As we can see from its website\footnote{http://julialang.org/}, it is a high-level and high-performance language for technical computing, with a syntax that is well known for everybody uses scientific programming languages. It also provides a compiler, distributed parallel execution and a mathematical function library. We chose it because of these characteristics and because it permits to parallelize programs in a very simple way.\\
+In this work the \textbf{Julia language} has been used as the main programming language. As we can see from its website\footnote{http://julialang.org/}, it is a high-level and high-performance language for technical computing, with a syntax that is well known for whom uses scientific programming languages. It also provides a compiler, distributed parallel execution and a mathematical function library. We chose it because of these characteristics and because it permits to parallelize programs in a very simple way.\\
 
-In next sections we will see in detail its characteristics and the code used for parallel computation.
+In the next sections we will see in detail its characteristics in the detail and the code used for parallel computation.
 
 \section{Principal characteristics}\label{sec23:julia}
 As we can see in the Julia website, this language has the following characteristics:
 \begin{itemize}
  \item Multiple dispatch: providing ability to define function behavior across many combinations of argument types
  \item Dynamic type system: types for documentation, optimization, and dispatch
- \item Good performance, approaching that of statically-compiled languages like C
+ \item Good performance, approaching statically-compiled languages like C
  \item Built-in package manager
  \item Lisp-like macros and other metaprogramming facilities
- \item Call Python functions: use the PyCall package
+ \item Call Python functions: use of the PyCall package
  \item Call C functions directly: no wrappers or special APIs
  \item Powerful shell-like capabilities for managing other processes
  \item Designed for parallelism and distributed computation
@@ -22,32 +22,28 @@ As we can see in the Julia website, this language has the following characterist
  \item MIT licensed: free and open source
 \end{itemize}
 
-From the syntax point of view, Julia takes inspiration from various dialects of \textit{Lisp}, including \textit{Scheme} and \textit{Common Lisp}, and it shares many features with \textit{Dylan} and \textit{Fortress}. Is is also possible to implement \textbf{metaprogramming} using macros. They are necessary because they are executed when code is parsed, therefore, macros allow the programmer to generate and include fragments of customized code before the full program is run. We can see the difference in the following example taken from the official documentation:
+From the syntax point of view, Julia takes inspiration from various dialects of \textit{Lisp}, including \textit{Scheme} and \textit{Common Lisp}, and it shares many features with \textit{Dylan} and \textit{Fortress}. It is also possible to implement \textbf{metaprogramming} using macros. They are necessary because they are executed when code is parsed, therefore, macros allow the programmer to generate and include fragments of customized code before the full program is run. We can see the difference in the following example taken from the official documentation:\\
 
 \begin{julia}
  > macro twostep(arg)
-     println("I execute at parse time. The argument
-             is: ", arg)
-     return :(println("I execute at runtime. 
-            The argument is: ", $arg))
+     println("I execute at parse time. The argument is: ", arg)
+     return :(println("I execute at runtime. The argument is: ", $arg))
    end
  
  > ex = macroexpand( :(@twostep :(1, 2, 3)) );
-   "I execute at parse time. The argument
-      is: :((1,2,3))"
+   "I execute at parse time. The argument is: :((1,2,3))"
  
  > typeof(ex)
    Expr
 
  > ex
-   :(println("I execute at runtime. The argument is: 
-     ",$(Expr(:copyast, :(:((1,2,3)))))))
+   :(println("I execute at runtime. The argument is: ",$(Expr(:copyast, :(:((1,2,3)))))))
 
  > eval(ex)
    "I execute at runtime. The argument is: (1,2,3)"
 \end{julia}
 
-Macro are invoked using the following syntax:
+Macros are invoked using the following syntax:
 \begin{julia}
  @name expr1 expr2 ...
 \end{julia}
@@ -64,13 +60,13 @@ All these commands can also be written in a script file with \texttt{.jl} extens
  user@pc: julia <filename>
 \end{julia}
 
-As we have seen in the list above Julia has good performances, which are achieved using \textbf{just-in-time (JIT)} compilation, implemented using \textit{LLVM}. This compiler, combined with the language's design allow it to approach the C performances. In table~\ref{tbl:JuliaBenchmark} we can see a little benchmark coming from the official website:
+As seen in the above list, Julia has good performances, which are achieved using \textbf{just-in-time (JIT)} compilation, implemented using \textit{LLVM}. This compiler, combined with the language's design allow it to approach the C performances. In table~\ref{tbl:JuliaBenchmark} we can see a little benchmark coming from the official website:
 
 \begin{table}[htb]
 \centering
 \caption[benchmark times relative to C]{benchmark times relative to C (smaller is better, C performance = 1.0). Table taken from the official documentation}
 \label{tbl:JuliaBenchmark}
-\begin{tabular}{p{1.2cm} | p{1.2cm} | p{1.3cm} | p{1.3cm} | p{1.3cm} | p{1cm} | p{1cm} | p{1cm}}
+\begin{tabular}{p{2cm} | p{1.2cm} | p{1.3cm} | p{1.3cm} | p{1.3cm} | p{1.2cm} | p{1.2cm} | p{1.2cm}}
 \toprule
 &\textbf{fib}& \textbf{parse-int}&\textbf{quick-sort}& \textbf{mandel}&\textbf{pi-sum}& \textbf{rand-mat-stat}& \textbf{rand-mat-mul}\\ \midrule
 \textbf{Fortran} 	& 0.70	& 5.05	& 1.31	& 0.81	& 1.00	& 1.45	& 3.48\\ \midrule
@@ -79,8 +75,8 @@ As we have seen in the list above Julia has good performances, which are achieve
 \textbf{R}		&533.52	& 45.73	&264.54	& 53.16	& 9.56	& 14.56	& 1.57\\ \midrule
 \textbf{Matlab}		& 26.89	&802.52	& 4.92	& 7.58	& 1.00	& 14.52	& 1.12\\ \midrule
 \textbf{Octave}         &9324.35&9581.44&1866.01&451.81	&299.31	& 30.93	& 1.12\\ \midrule
-\textbf{Mathe-matica}	&118.53	&15.02	& 43.23	& 5.13	& 1.69	& 5.95	& 1.30\\ \midrule
-\textbf{Java-script}	& 3.36	& 6.06	& 2.70	& 0.66	& 1.01	& 2.30	& 15.07\\ \midrule
+\textbf{Mathematica}	&118.53	&15.02	& 43.23	& 5.13	& 1.69	& 5.95	& 1.30\\ \midrule
+\textbf{Javascript}	& 3.36	& 6.06	& 2.70	& 0.66	& 1.01	& 2.30	& 15.07\\ \midrule
 \textbf{Go}		& 1.86	& 1.20	& 1.29	& 1.11	& 1.00	& 2.96	& 1.42\\ \midrule
 \textbf{LuaJIT}         & 1.71	& 5.77	& 2.03	& 0.67	& 1.00	& 3.27	& 3.27\\ \midrule
 \textbf{Java}	        & 1.21	& 3.35	& 2.60	& 1.35	& 1.00	& 3.92	& 2.36\\ \midrule
@@ -88,14 +84,14 @@ As we have seen in the list above Julia has good performances, which are achieve
 \end{tabular}
 \end{table}
 
-Julia supports also modular applications. In particular, modules in Julia are separate global variable workspaces. They are delimited by the keywords:
+Julia also supports modular applications. In particular, modules in Julia are separate global variable workspaces. They are delimited by the keywords:
 \begin{julia}
  module Name
  ...
  end
 \end{julia}
 
-With modules, one can create top-level definitions without worrying about name conflicts. Within a module, it is possible to control which names from other modules are visible (via importing), and specify which names are intended to be public (via exporting). In the official documentation we can find the following example:
+With modules, one can create top-level definitions without worrying about name conflicts. Within a module, it is possible to control which names from other modules are visible (via importing), and to specify which names are intended to be public (via exporting). In the official documentation we can find the following example:
 \begin{julia}
  module MyModule
  export x, y
@@ -138,11 +134,11 @@ end
 
 \section{Parallel programming in Julia}\label{sec23:parallelJulia}
 
-How we have seen in the earlier chapter, modern computer posses more than one CPU and several computers can be combined together in a cluster. Moreover we have seen the big advantages that this type of architecture can give us. For its parallel features, Julia have chosen an environment based on \textit{message passing} (so we have multiple processes which run in separate memory domains). However, the Julia's implementation of message passing is a bit different from other environments such as MPI. In fact communication is generally "one-sided", so the programmer needs to explicitly manage only one process in a two-process operation. In addition these operations do not seems "message send" and "message receive" but resemble higher-level operations like calls to user functions.\\
+How we have seen in the earlier chapter, modern computers possesses more than one CPU and several computers can be combined together in a cluster. Moreover we have seen the great advantages that this type of architecture can return. For its parallel features, Julia has chosen an environment based on \textit{message passing} (so we have multiple processes which run in separate memory domains). However, the Julia's implementation of message passing is a bit different from other environments such as MPI. In fact communication is generally "one-sided", so the programmer needs to explicitly manage only one process in a two-process operation. Furthermore these operations do not seem "message send" and "message receive" but resemble higher-level operations like calls to user functions.\\
 
-The most important primitives, are \textbf{remote references} and \textbf{remote calls}. The former is an object that can be used from any process to refer to an object stored on a particular process, while the latter is a request by one process to call a certain function on certain arguments on another process. A remote call returns a remote reference to its result and \textit{return immediately}, while its process proceeds to the next operation. It is possible to wait for a remote call to finish by calling the function \texttt{wait} on its remote reference (or \texttt{fetch} if we are waiting for its value).\\
+The most important primitives are \textbf{remote references} and \textbf{remote calls}. The former is an object that can be used from any process to refer to an object stored on a particular process, while the latter is a request by one process to call a certain function on certain arguments on another process. A remote call returns a remote reference to its result and \textit{returns immediately}, while its process proceeds to the next operation. It is possible to wait for a remote call to finish by calling the function \texttt{wait} on its remote reference (or \texttt{fetch} if we are waiting for its value).\\
 
-Now we can examine some useful functions for parallel programming. The simpler function is \texttt{remotecall()}, which takes as parameters the \textit{index of the process that will do the work}, the function that will be invoked and its parameters. It is considered a low-level interface that provides a finer control on the software. However most parallel programming in Julia, does not reference specific processes or the number of processes available. So usually Julia programmers uses the \texttt{@spawn} macro, which operates on an expression and choose where to do the operation. For example we can write:
+Now we can examine some useful functions for parallel programming. The simpler function is \texttt{remotecall()}, which takes as parameters the \textit{index of the process that will do the work}, the function that will be invoked and its parameters. It is considered a low-level interface that provides a finer control on the software. However, most parallel programming in Julia does not reference specific processes or the number of processes available. So usually Julia programmers use the \texttt{@spawn} macro, which operates on an expression, and choose where to do the operation. For example we can write:
 \begin{julia}
  julia> r = @spawn rand(2,2)
  RemoteRef(1,1,0)
@@ -154,9 +150,9 @@ Now we can examine some useful functions for parallel programming. The simpler f
  1.10824216411304866 1.13798233877923116
  1.12376292706355074 1.18750497916607167
 \end{julia}
-Note the use of \texttt{1 .+ fetch(r)} instead of \texttt{1 .+ r}. This is because we do not know where the code will run, so in general a \texttt{fetch()} might be required to move r to the process doing the addition. In this case, \texttt{@spawn} is smart enough to perform the computation on the process that owns r, so the \texttt{fetch()} will be a no-op.
+Note the use of \texttt{1.+fetch(r)} instead of \texttt{1.+r}. This is because we do not know where the code will run, so in general a \texttt{fetch()} might be required to move r to the process doing the addition. In this case, \texttt{@spawn} is smart enough to perform the computation on the process that owns r, so the \texttt{fetch()} will be a no-op.
 
-Now we have to do a final note on code availability. In fact, according to Julia parallel architecture, the code must be available on any process that runs it. For example we can observe this code from the official documentation:
+Now we have to do a final note on code availability. In fact, according to Julia's parallel architecture, the code must be available on any process that runs it. For example we can observe this code from the official documentation:
 \begin{julia}
  julia> function rand2(dims...)
           return 2*rand(dims...)
@@ -169,10 +165,8 @@ Now we have to do a final note on code availability. In fact, according to Julia
 
  julia> @spawn rand2(2,2)
  RemoteRef(1,1,1)
-
  julia> @spawn rand2(2,2)
  RemoteRef(2,1,2)
-
  julia> exception on 2: in anonymous: rand2 not defined
 \end{julia}
 
@@ -186,4 +180,4 @@ In addition, we can force a command to run on all processes using the \texttt{@e
  @everywhere using ModuleName
 \end{julia}
 
-In conclusion, here we have seen the most interesting features of Julia language (in particular the ones which are involved in parallel computing). At this point, the reader should have understood why we have chosen this language and the decisions at the basis of the developed library
+So far we have seen the most interesting features of the Julia language (in particular the ones involved in parallel computing). At this point, the reader should have understood the reasons within the choice of this language and the decisions at the basis of the developed library
