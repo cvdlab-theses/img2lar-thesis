@@ -1,8 +1,8 @@
-In the previous Chapter we have see how to prepare input for our software. Now we will focus on the proper process conversion. How we will see here, for the conversion we have a \textbf{pipeline of transformations} which progressively refines the results. Firstly we will give an overall overview of the pipeline, then we will see in detail each step.
+In the previous Chapter we have see how to prepare input for our software. Now we will focus on the proper process conversion. How we will see here, for the conversion we have a \textbf{pipeline of transformations} which progressively refines the results. Firstly we will give an overall overview of the pipeline, then we will see each step in the detail.
 
 \section{The conversion pipeline}\label{sec33:Pipeline}
 
-We have already seen in Chapter~\ref{sec31:Grid}, in the conversion process we divide our input into \textit{blocks} which are manipulated in parallel. In particular, we execute several transformations for each block that progressively refine the result. As a consequence we can see that from an architectural point of view \texttt{ImagesToLARModel} is an application based on the pattern \textbf{pipes and filters}, where each conversion step represent a filter whose output is the input for the next one. Actually we have the following steps:
+As have already seen in Chapter~\ref{sec31:Grid}, in the conversion process we divide our input into \textit{blocks} which are manipulated in parallel. In particular, we execute several transformations for each block that progressively refine the result. As a consequence we can see that from an architectural point of view \texttt{ImagesToLARModel} is an application based on the pattern \textbf{pipes and filters}, where each conversion step represents a filter whose output is the input for the following one. Actually we have the following steps:
 \begin{itemize}
  \item \textbf{Pixel to voxels transformations}
  \item \textbf{Boundaries merge}
@@ -26,7 +26,7 @@ begin
 end       
 \end{pseudo}
 
-How we can see from the pseudocode, for the implementation of a step, the user have to give the sizes of the block
+How we can see from the pseudocode, the user has to give the sizes of the block for the implementation of a step
 
 \section{Converting pixels to voxels}\label{sec33:PixelsToVoxels}
 
@@ -66,7 +66,7 @@ Now we can see the first step of the conversion pipeline: \textbf{conversion fro
    \label{fig:linearizedMatrix}
 \end{figure}
 
-We have already seen that the input for this step consists in binary images which will contain only $0x00$ and $0xff$ values. Obviously we are only interested in non-empty values, so what we have to do now is to iterate on data and get only indices of the array where the value is $0xff$. Consequently, we have obtained a set of pixels that belongs to the model. If we want a real three-dimensional representation, we only have to map a pixel to a voxel transforming flat squares into cube geometries.\\
+We have already seen that the input for this step consists in binary images which will contain only $0x00$ and $0xff$ values. Obviously we are only interested in non-empty values, so what we have to do now is to iterate on data and get only indices of the array where the value is $0xff$. Consequently, we have obtained a set of pixels that belong to the model. If we want a real three-dimensional representation, we only have to map a pixel to a voxel transforming flat squares into cube geometries.\\
 
 So far we have obtained a list of cuboidal cells inside a block; however in our representations we want only \textbf{boundary cells}, so we have to find them. How we have seen in Chapter~\ref{sec21:topologicalOperators} it is simple to compute the boundaries using LAR. So at this point we have to convert the list of cells into a LAR model. This is possible by creating a basis for a cell complex (formed by cuboids into a grid of the same size of the image grid with integer coordinates that vary from $(0,0,0)$ to $(blockDx, blockDy, blockDz)$) and saving only cubes whose indices are the same contained in the list we have computed earlier. Final boundary computation can be done computing a \textbf{boundary matrix} for the block of sizes $(blockDx, blockDy, blockDz)$ and, as it depends only on those dimensions, it can be saved somewhere and reused with other models.\\
 
@@ -83,7 +83,14 @@ All this process is \textbf{embarrassingly parallel}, which means that every blo
 
 \section{Merging boundaries}\label{sec33:Boundaries}
 
-At the end of the previous step, we have obtained at most $\displaystyle\frac{image-width}{blockDx} \times \displaystyle\frac{image-height}{blockDy} \times \displaystyle\frac{image-depth}{blockDz}$ blocks (some of them could be empty). However because of every single block is processed independently of the other we still have boundaries between them. In fact, the boundary operator works only on a single block so we have to \textit{manually remove faces between blocks}. A simple procedure is explained in the following pseudocode and in Figure~\ref{fig:boundaryMergeIteration}:
+At the end of the previous step, we have obtained at most $\displaystyle\frac{image-width}{blockDx} \times \displaystyle\frac{image-height}{blockDy} \times \displaystyle\frac{image-depth}{blockDz}$ blocks (some of them could be empty). However even though every single block is processed independently we still have boundaries between them. In fact, the boundary operator works only on a single block so we have to \textit{manually remove faces between blocks}. A simple procedure is explained in the following pseudocode and in Figure~\ref{fig:boundaryMergeIteration}:\newpage
+
+\begin{figure}[htb] %  figure placement: here, top, bottom
+   \centering
+   \includegraphics[width=0.30\linewidth]{images/BoundaryMergeIteration.png}
+   \caption[Merging of boundary faces]{Merging of boundary faces. For a single block we need adjacent blocks on the right, top and front}
+   \label{fig:boundaryMergeIteration}
+\end{figure}
 
 \begin{pseudo}[caption={Removal of internal boundaries}, label={lst:boundaryRemoval}]
 begin
@@ -97,13 +104,6 @@ begin
 end
 \end{pseudo}
 
-\begin{figure}[htb] %  figure placement: here, top, bottom
-   \centering
-   \includegraphics[width=0.30\linewidth]{images/BoundaryMergeIteration.png}
-   \caption[Merging of boundary faces]{Merging of boundary faces. For a single block we need adjacent blocks on the right, top and front}
-   \label{fig:boundaryMergeIteration}
-\end{figure}
-
 How we can see from the pseudocode, the first thing we will need is to recognize boundaries from the interior of a block. In fact, we can decompose a single block into seven parts (listed in Figure~\ref{fig:boundaries}) observing the coordinates of every face.
 
 \begin{figure}[htb] %  figure placement: here, top, bottom
@@ -113,7 +113,7 @@ How we can see from the pseudocode, the first thing we will need is to recognize
    \label{fig:boundaries}
 \end{figure}
 
-Now we can focus on the merge procedure. First of all we need to remove double vertices from models. To achieve this goal, we need to iterate on the vertices array and find and remove them saving the indices of the removed ones at the same time. Then we have to reindex the faces in order to remove links to the removed vertices. At this point, we can find faces with the same coordinates and remove them from both blocks we are merging. In Listing~\ref{lst:mergeBoundary} there is the pseudocode for the procedure we have described here.
+Now we can focus on the merge procedure. First of all we need to remove double vertices from models. To achieve this goal, we need to iterate on the vertices array and find and remove them saving the indices of the removed ones at the same time. Then we have to reindex the faces in order to remove links to the removed vertices. At this point, we can find faces with the same coordinates and remove them from both blocks we are merging. In Listing~\ref{lst:mergeBoundary} there is the pseudocode for the procedure we have here described.
 
 \begin{pseudo}[caption={Merging of two boundaries}, label={lst:mergeBoundary}]
 begin
@@ -134,7 +134,7 @@ end
 
 \section{Merging blocks}\label{sec33:Blocks}
 
-At the end of the previous step, we have obtained models representing the inner parts of a single block and the boundaries remained after removal of duplicates. Now we are interested in merge all these models into blocks removing duplicated vertices between them, in order to save space and prepare the model to the next step. In fact, the process that produces the models uses adjacent cuboids with duplicated vertices. An example is given in Figure~\ref{fig:duplicates}, where we can see the boundary of a model obtained from a $2 \times 2 \times 2$ grid
+At the end of the previous step, we have obtained models representing the inner parts of a single block and the boundaries remaining after removal of duplicates. Now we are interested in merging all these models into blocks removing duplicated vertices between them, in order to save space and prepare the model for the next step. In fact, the process that produces the models uses adjacent cuboids with duplicated vertices. An example is given in Figure~\ref{fig:duplicates}, where we can see the boundary of a model obtained from a $2 \times 2 \times 2$ grid
 
 \begin{figure}[htb] %  figure placement: here, top, bottom
    \centering
@@ -149,7 +149,7 @@ As in the previous step we have to concatenate models, remove the repeated coord
 
 At the end of the previous step we have obtained independent blocks without double vertices. However, these blocks are not so good to see, as they have squared edges (remember that they are composed by attached cuboids). As the medical parts usually have rounded edges, now we want to \textbf{smooth} the three-dimensional model.\\
 
-There are many different algorithms for mesh smoothing, the simpler and the one it has been used in the library is \textbf{laplacian smoothing}. Here, for each vertex in a mesh, a new position is chosen according to local information (such as the coordinates of neighbors) and the vertex is moved there. If that mesh is topologically a rectangular grid (so each internal vertex is connected to four neighbors) then this operation produces the \textit{Laplacian} of the mesh.
+There are many different algorithms for mesh smoothing, the simpler and the one in the library is \textbf{laplacian smoothing}. Here, for each vertex in a mesh, a new position is chosen according to local information (such as the coordinates of neighbors) and the vertex is moved there. If that mesh is topologically a rectangular grid (with each internal vertex connected to four neighbors) then this operation produces the \textit{Laplacian} of the mesh.
 \begin{figure}[htb] %  figure placement: here, top, bottom
    \centering
    \includegraphics[width=0.60\linewidth]{images/LaplacianSmoothing.png}
@@ -157,7 +157,7 @@ There are many different algorithms for mesh smoothing, the simpler and the one 
    \label{fig:laplacianSmoothing}
 \end{figure}
 
-As we can see from Figure~\ref{fig:laplacianSmoothing}, with substitution of every vertex position with the mean of the neighbors positions, we can obtain a curve with smoothed edges. This procedure can be repeated many times. This is the pseudocode for laplacian smoothing:
+As we can see from Figure~\ref{fig:laplacianSmoothing}, with substitution of every vertex position with the mean of the neighbors positions, we can obtain a curve with smoothed edges. This procedure can be repeated many times. This is the pseudocode for laplacian smoothing:\newpage
 
 \begin{pseudo}[caption={Laplacian smoothing}, label={lst:laplacianSmoothing}]
 begin
@@ -166,16 +166,9 @@ begin
 end
 \end{pseudo}
 
-In that procedure, $N$ is the number of adjacent vertices to vertex $i$, $\bar{x}_{j}$ is the position of the j-th adjacent vertex and $\bar{x}_{i}$ is the new position for $i$. How we can see, computation of adjacent vertices is a very important task. However, using LAR it become simple as we just need to compute the $VV$ relation.\\
+In this procedure, $N$ is the number of adjacent vertices to vertex $i$, $\bar{x}_{j}$ is the position of the j-th adjacent vertex and $\bar{x}_{i}$ is the new position for $i$. How we can see, computation of adjacent vertices is a very important task. However, using LAR it become simple as we just need to compute the $VV$ relation.\\
 
-Now we can focus on smoothing for our blocks. One great problem that arises from our subdivision is the computation of adjacent vertices on boundaries. In fact we cannot load the entire model into memory due to the enormous sizes. The solution to this problem consists in loading also the near blocks to the one we want to smooth, execute the algorithm and than save only vertices of the block. In Figure~\ref{fig:SmoothingBlocks} there is a graphical explanation for the algorithm while in Listing~\ref{lst:blockSmoothing} there is the pseudocode.
-
-\begin{figure}[htb] %  figure placement: here, top, bottom
-   \centering
-   \includegraphics[width=0.30\linewidth]{images/SmoothingBlocks.png}
-   \caption[Smoothing of a single block]{Smoothing of a single block. The red block at the center of the figure is the current one, while the other twenty six colored ones are the blocks that will be part of the model which will be smoothed for this iteration}
-   \label{fig:SmoothingBlocks}
-\end{figure}
+Now we can focus on smoothing on our blocks. One great problem that arises from our subdivision is the computation of adjacent vertices on boundaries. In fact we cannot load the entire model into memory due to the enormous sizes. The solution to this problem consists in loading also the near blocks to the one we want to smooth, execute the algorithm and than save only the vertices of the block. In Figure~\ref{fig:SmoothingBlocks} there is a graphical explanation for the algorithm while in Listing~\ref{lst:blockSmoothing} there is the pseudocode.
 
 \begin{pseudo}[caption={Smoothing of a block}, label={lst:blockSmoothing}]
 begin
@@ -187,13 +180,20 @@ begin
 end
 \end{pseudo}
 
+\begin{figure}[htb] %  figure placement: here, top, bottom
+   \centering
+   \includegraphics[width=0.25\linewidth]{images/SmoothingBlocks.png}
+   \caption[Smoothing of a single block]{Smoothing of a single block. The red block at the center of the figure is the current one, while the other twenty six colored ones are the blocks that will be part of the model which will be smoothed for this iteration}
+   \label{fig:SmoothingBlocks}
+\end{figure}
+
 \section{Creating the final model}\label{sec33:FinalModel}
 
-At the end of the previous step, we have obtained smoothed blocks. Now, as we want to study the entire model, we have to merge all these blocks in a unique file. The file format chosen is the \textbf{wavefront obj} format, which is simple and widespread. The syntax used is the following:
+At the end of the previous step, we have obtained smoothed blocks. Now, as we want to study the entire model, we have to merge all these blocks in a unique file. The file format chosen is \textbf{wavefront obj}, which is simple and widespread. The syntax used is the following:
 
 \begin{itemize}
- \item All vertices are described with their coordinates and written on a single row according to the following syntax:\\ $\texttt{v xCoord yCoord zCoord}$
- \item All faces are described with their vertex index (calculated from their row) according to the following syntax:\\ $\texttt{f vertex1 vertex2 \dots vertexn}$
+ \item All vertices are described by their coordinates and written on a single row according to the following syntax:\\ $\texttt{v xCoord yCoord zCoord}$
+ \item All faces are described by their vertex index (calculated from their row) according to the following syntax:\\ $\texttt{f vertex1 vertex2 \dots vertexn}$
 \end{itemize}
 
 In Figure~\ref{fig:objSample} there is an example of an obj file
